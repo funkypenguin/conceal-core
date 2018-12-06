@@ -1,7 +1,11 @@
 FROM debian:8 as builder
 
-ARG BRANCH=ccx-cli-ubuntu-v.4.1.1
-ENV BRANCH=${BRANCH}
+ARG REPO=TheCircleFoundation/conceal-core
+ENV REPO=${REPO}
+
+# Unneeded in build stage, but avoids hook errors
+ARG BUILD_DATE
+ARG VCS_REF
 
 # install build dependencies
 # checkout the latest tag
@@ -9,6 +13,7 @@ ENV BRANCH=${BRANCH}
 RUN apt-get update && \
     apt-get install -y \
       build-essential \
+      curl \
       gdb \
       libreadline-dev \
       python-dev \
@@ -18,29 +23,35 @@ RUN apt-get update && \
       git \
       libc6-dev \
       cmake \
-      libboost-all-dev && \
-    git clone --branch $BRANCH https://github.com/TheCircleFoundation/conceal-core.git /opt/conceal-core && \
-    cd /opt/conceal-core && \
+      libboost-all-dev 
+
+
+RUN \
+    TAG=$(curl -L --silent "https://api.github.com/repos/$REPO/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")') && \
+    echo git clone --branch $TAG https://github.com/$REPO /src && \
+    git clone --branch $TAG https://github.com/$REPO /src && \
+    cd /src && \
     mkdir build && \
     cd build && \
     export CXXFLAGS="-w -std=gnu++11" && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-fassociative-math" -DCMAKE_CXX_FLAGS="-fassociative-math" -DSTATIC=true -DDO_TESTS=OFF .. && \
     make -j$(nproc)
 
+####### 2nd stage
 FROM debian:8-slim
 
-# Zedwallet needs libreadline 
-RUN apt-get update && \
-    apt-get install -y \
-      libreadline-dev \
-     && rm -rf /var/lib/apt/lists/*
+# Now we DO need these, for the auto-labeling of the image
+ARG BUILD_DATE
+ARG VCS_REF
 
-WORKDIR /usr/local/bin
-COPY --from=builder /opt/conceal-core/build/src/conceald .
-COPY --from=builder /opt/conceal-core/build/src/walletd .
-COPY --from=builder /opt/conceal-core/build/src/concealwallet .
-COPY --from=builder /opt/conceal-core/build/src/concealminer .
-RUN mkdir -p /var/lib/conceald
-WORKDIR /var/lib/conceald
+# Good docker practice, plus we get microbadger badges
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url="https://github.com/funkypenguin/conceal.git" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.schema-version="2.2-r1"
+
 ENTRYPOINT ["/usr/local/bin/conceald"]
-CMD ["--no-console","--data-dir","/var/lib/conceald","--rpc-bind-ip","0.0.0.0","--rpc-bind-port","11898","--p2p-bind-port","11899"]
+
+COPY --from=builder /src/build/src/* /usr/local/bin/ 
+
+CMD ["--no-console","--rpc-bind-ip","0.0.0.0","--rpc-bind-port","16000","--p2p-bind-port","15000"]
