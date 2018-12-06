@@ -3,13 +3,13 @@
 [discordurl]: http://chat.funkypenguin.co.nz
 [patreonurl]: https://patreon.com/funkypenguin
 [blogurl]: https://www.funkypenguin.co.nz
-[hub]: https://hub.docker.com/r/funkypenguin/conceal/
+[hub]: https://hub.docker.com/r/funkypenguin/conceald/
 
 [![geek-cookbook](https://raw.githubusercontent.com/funkypenguin/www.funkypenguin.co.nz/master/images/geek-kitchen-banner.png)][cookbookurl]
 
 # Contents
 
-1. [What is funkypenguin/conceal?](#what-is-funkypenguin-conceal)
+1. [What is funkypenguin/conceald?](#what-is-funkypenguin-conceald)
 2. [Why should I use this?](#why-should-i-use-this)
 3. [How do I use it?](#how-do-i-use-this)
 4. [CHANGELOG](#changelog)
@@ -28,7 +28,7 @@ Got more details at:
 
 ---
 
-# What is funkypenguin/conceal ?
+# What is funkypenguin/conceald ?
 
 
 # Why should I use this?
@@ -37,6 +37,3 @@ Got more details at:
 # How do I use this?
 
 # CHANGELOG
-
-
-
